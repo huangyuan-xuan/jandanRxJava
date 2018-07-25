@@ -1,18 +1,17 @@
 package com.huangyuanlove.jandanrxjava.fragment;
 
 import android.app.Activity;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.huangyuanlove.jandanrxjava.R;
 import com.huangyuanlove.jandanrxjava.RecyclerViewScrollListener;
-import com.huangyuanlove.jandanrxjava.databinding.PicsFragmentBinding;
 import com.huangyuanlove.jandanrxjava.base.BaseFragment;
 import com.huangyuanlove.jandanrxjava.http.RetrofitFactory;
 import com.huangyuanlove.jandanrxjava.model.PicsVO;
@@ -21,6 +20,9 @@ import com.huangyuanlove.jandanrxjava.model.RequestResultBean;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
@@ -28,11 +30,15 @@ import io.reactivex.schedulers.Schedulers;
 /**
  * Description:无聊图
  */
-public class PicsFragment extends BaseFragment implements SwipeRefreshLayout.OnRefreshListener{
+public class PicsFragment extends BaseFragment implements SwipeRefreshLayout.OnRefreshListener {
 
 
+    @BindView(R.id.pics_list_view)
+    RecyclerView picsListView;
+    @BindView(R.id.swipe_refresh_layout)
+    SwipeRefreshLayout swipeRefreshLayout;
+    Unbinder unbinder;
     private Activity context;
-    private PicsFragmentBinding binding;
     private int pageNum = 1;
     private List<PicsVO> picsVOs = new ArrayList<>();
     private PicsAdapter adapter;
@@ -49,19 +55,20 @@ public class PicsFragment extends BaseFragment implements SwipeRefreshLayout.OnR
     @Nullable
     @Override
     public View onCreateView(@Nullable LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = DataBindingUtil.inflate(inflater, R.layout.pics_fragment,container,false);
+        View view = inflater.inflate(R.layout.pics_fragment, container, false);
+        unbinder = ButterKnife.bind(this, view);
         initView();
         initData(false);
-        return binding.getRoot();
+        return view;
     }
 
     private void initView() {
-        binding.swipeRefreshLayout.setOnRefreshListener(this);
-        adapter = new PicsAdapter(context,picsVOs);
+        swipeRefreshLayout.setOnRefreshListener(this);
+        adapter = new PicsAdapter(context, picsVOs);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
-        binding.picsListView.setLayoutManager(linearLayoutManager);
-        binding.picsListView.setAdapter(adapter);
-        binding.picsListView.addOnScrollListener(new RecyclerViewScrollListener() {
+        picsListView.setLayoutManager(linearLayoutManager);
+        picsListView.setAdapter(adapter);
+        picsListView.addOnScrollListener(new RecyclerViewScrollListener() {
             @Override
             public void onLoadMore() {
                 initData(true);
@@ -69,10 +76,11 @@ public class PicsFragment extends BaseFragment implements SwipeRefreshLayout.OnR
         });
 
     }
+
     private void initData(final boolean isLoadMore) {
-        if(isLoadMore){
+        if (isLoadMore) {
             pageNum += 1;
-        }else{
+        } else {
             pageNum = 1;
         }
 
@@ -82,17 +90,17 @@ public class PicsFragment extends BaseFragment implements SwipeRefreshLayout.OnR
                 .subscribe(new Consumer<RequestResultBean<PicsVO>>() {
                     @Override
                     public void accept(RequestResultBean<PicsVO> picsVORequestResultBean) throws Exception {
-                        if(picsVORequestResultBean!=null && "ok".equals(picsVORequestResultBean.getStatus())){
-                            if(isLoadMore){
+                        swipeRefreshLayout.setRefreshing(false);
+                        if (picsVORequestResultBean != null && "ok".equals(picsVORequestResultBean.getStatus())) {
+                            if (isLoadMore) {
                                 picsVOs.addAll(picsVORequestResultBean.getComments());
-                            }else{
+                            } else {
                                 picsVOs = picsVORequestResultBean.getComments();
                             }
                             adapter.setLists(picsVOs);
                         }
                     }
                 });
-
 
 
     }
@@ -103,5 +111,9 @@ public class PicsFragment extends BaseFragment implements SwipeRefreshLayout.OnR
     }
 
 
-
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
+    }
 }

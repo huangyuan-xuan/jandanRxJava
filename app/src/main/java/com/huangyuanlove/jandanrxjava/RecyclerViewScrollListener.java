@@ -15,12 +15,6 @@ import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
  */
 
 public abstract class RecyclerViewScrollListener extends RecyclerView.OnScrollListener {
-    private int previousTotal;
-    private boolean isBottom;
-    private int firstVisibleItem;
-    private int visibleItemCount;
-    private int totalItemCount;
-
 
     @Override
     public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -48,7 +42,7 @@ public abstract class RecyclerViewScrollListener extends RecyclerView.OnScrollLi
             if (lastPosition == recyclerView.getLayoutManager().getItemCount() - 1) {
                 ToastUtils.show(recyclerView.getContext(), "滑动到底了");
 
-
+                onLoadMore();
             }
 
         }

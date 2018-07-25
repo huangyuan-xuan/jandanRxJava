@@ -31,13 +31,7 @@ public class RetrofitFactory {
                 .addInterceptor(new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
                     @Override
                     public void log(String message) {
-                        try {
-                            String text = URLDecoder.decode(message, "utf-8");
-                            L.d("OKHttp-----", text);
-                        } catch (UnsupportedEncodingException e) {
-                            e.printStackTrace();
-                            L.d("OKHttp-----", message);
-                        }
+                        L.d("OKHttp-----", message);
 
                     }
                 }).setLevel(BuildConfig.DEBUG ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE))

@@ -1,12 +1,12 @@
 package com.huangyuanlove.jandanrxjava.fragment;
 
 import android.app.Activity;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import com.huangyuanlove.jandanrxjava.R;
 import com.huangyuanlove.jandanrxjava.RecyclerViewScrollListener;
 import com.huangyuanlove.jandanrxjava.base.BaseFragment;
-import com.huangyuanlove.jandanrxjava.databinding.GirlsFragmentBinding;
 import com.huangyuanlove.jandanrxjava.http.RetrofitFactory;
 import com.huangyuanlove.jandanrxjava.model.GirlPicsVO;
 import com.huangyuanlove.jandanrxjava.model.RequestResultBean;
@@ -22,6 +21,9 @@ import com.huangyuanlove.jandanrxjava.model.RequestResultBean;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
@@ -30,7 +32,11 @@ import io.reactivex.schedulers.Schedulers;
  * Description:妹子图
  */
 public class GirlsFragment extends BaseFragment {
-    private GirlsFragmentBinding binding;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.swipe_refresh_layout)
+    SwipeRefreshLayout swipeRefreshLayout;
+    Unbinder unbinder;
     private Activity context;
 
     private List<GirlPicsVO> girlPicsVOs = new ArrayList<>();
@@ -47,14 +53,16 @@ public class GirlsFragment extends BaseFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = DataBindingUtil.inflate(inflater, R.layout.girls_fragment, container, false);
+        View view = inflater.inflate(R.layout.girls_fragment, container, false);
+        unbinder = ButterKnife.bind(this, view);
+
         initView();
         initData(false);
-        return binding.getRoot();
+        return view;
     }
 
     private void initView() {
-        binding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 initData(false);
@@ -64,9 +72,9 @@ public class GirlsFragment extends BaseFragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
         linearLayoutManager.findFirstVisibleItemPosition();
         adapter = new GirlPicsAdapter(context, girlPicsVOs);
-        binding.recyclerView.setAdapter(adapter);
-        binding.recyclerView.setLayoutManager(linearLayoutManager);
-        binding.recyclerView.addOnScrollListener(new RecyclerViewScrollListener() {
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.addOnScrollListener(new RecyclerViewScrollListener() {
             @Override
             public void onLoadMore() {
                 initData(true);
@@ -89,7 +97,7 @@ public class GirlsFragment extends BaseFragment {
                 .subscribe(new Consumer<RequestResultBean<GirlPicsVO>>() {
                     @Override
                     public void accept(RequestResultBean<GirlPicsVO> girlPicsVORequestResultBean) throws Exception {
-                        binding.swipeRefreshLayout.setRefreshing(false);
+                        swipeRefreshLayout.setRefreshing(false);
                         if (girlPicsVORequestResultBean != null && "ok".equals(girlPicsVORequestResultBean.getStatus())) {
                             if (isLoadMore) {
                                 girlPicsVOs.addAll(girlPicsVORequestResultBean.getComments());
@@ -102,5 +110,11 @@ public class GirlsFragment extends BaseFragment {
                 });
 
 
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 }
